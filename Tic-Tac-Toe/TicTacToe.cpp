@@ -9,7 +9,8 @@ TicTacToe::TicTacToe():turn(true),cur_state(size){
     for(auto &it : cur_state){
         it.resize(size,EMPTY);
     }
-    my_tree = new Tree;
+    //my_tree = new Tree;
+    my_tree = std::make_shared<Tree>();
 }
 
 
@@ -20,8 +21,8 @@ int TicTacToe::print(){
     int length     = 3*size; 
     int endl_count = 0;
 
-    for(int i = 0; i < size; i++){
-        for(int j = 0; j < size; j++){
+    for(size_t i = 0; i < size; i++){
+        for(size_t j = 0; j < size; j++){
             
             if (count == 0){
                 for(a = 0; a < length; a++){
@@ -251,8 +252,8 @@ int TicTacToe::game_state(){
     else if( (cur_state[0][2] == HASO) && (cur_state[1][2] == HASO) && (cur_state[2][2] == HASO))
         return 2;
  
-    for(int i = 0; i < size; i++){
-        for(int j = 0; j < size; j++){
+    for(size_t i = 0; i < size; i++){
+        for(size_t j = 0; j < size; j++){
             if( (cur_state[i][j] == HASO) || (cur_state[i][j] == HASX))
                 mcount++;
         }
@@ -277,13 +278,13 @@ bool TicTacToe::give_turn(){
 
 
 void TicTacToe::roll_back(int step){
-    for(int i = 0; i < step; i++)std::cout << "\e[A";
+    for(size_t i = 0; i < step; i++)std::cout << "\e[A";
 }
 
 void TicTacToe::print_state(){
 
-    for(int i = 0; i < size; i++){
-        for(int j = 0; j < size; j++){
+    for(size_t i = 0; i < size; i++){
+        for(size_t j = 0; j < size; j++){
             
             std::cout << cur_state[i][j] << "  ";
     

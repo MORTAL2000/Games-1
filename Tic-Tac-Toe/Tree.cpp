@@ -5,8 +5,8 @@ Tree::Tree(){
 
 void Tree::print(const std::vector<std::vector<TicTacToe::state> >& v){
     std::cout << "Size of vec = " << v.size() << std::endl;
-    for(int i = 0; i < v.size(); i++){
-        for(int j = 0; j < v.size(); j++){
+    for(size_t i = 0; i < v.size(); i++){
+        for(size_t j = 0; j < v.size(); j++){
             
             std::cout << v[i][j] << "  ";
     
@@ -25,7 +25,8 @@ void Tree::minimax(int& x, int& y, std::vector<std::vector<TicTacToe::state> > v
     // if O has won return +10    
     // if draw return 0
     bool turn  = true;
-    Node *n = new Node;
+   // Node *n = new Node;
+    std::shared_ptr<Node> n = std::make_shared<Node>();
     
     n->v   = v;
     n->val = 9999;
@@ -52,7 +53,7 @@ void Tree::minimax(int& x, int& y, std::vector<std::vector<TicTacToe::state> > v
 
 // since create_tree makes tree now write depth first search
 
-int Tree::depth_first_search(Node* n, bool turn){
+int Tree::depth_first_search(std::shared_ptr<Node> n, bool turn){
     if(n->val == -10 || n->val == 0 || n->val == 10) return n->val;
     else if(turn){
         int max = -10000000; 
@@ -73,7 +74,7 @@ int Tree::depth_first_search(Node* n, bool turn){
     }
 }   
 
-void Tree::create_tree(Node *n, std::vector<std::pair<int, int>> ev, bool turn){
+void Tree::create_tree(std::shared_ptr<Node> n, std::vector<std::pair<int, int>> ev, bool turn){
 
     static int count = 0;
     // loss
@@ -95,7 +96,7 @@ void Tree::create_tree(Node *n, std::vector<std::pair<int, int>> ev, bool turn){
 
         if(turn) {
             // HASO turn
-            Node * node = new Node;
+            std::shared_ptr<Node> node = std::make_shared<Node>();
             node->v = n->v;
             node->val = -9999;
             node->v[it->first][it->second] = TicTacToe::HASO;
@@ -105,7 +106,7 @@ void Tree::create_tree(Node *n, std::vector<std::pair<int, int>> ev, bool turn){
             create_tree(node, find_empty_vec(node->v), false); 
             
         }else{
-            Node * node = new Node;
+            std::shared_ptr<Node> node = std::make_shared<Node>();
             node->v = n->v;
             node->val = 9999;
             node->v[it->first][it->second] = TicTacToe::HASX;  
@@ -122,8 +123,8 @@ void Tree::create_tree(Node *n, std::vector<std::pair<int, int>> ev, bool turn){
 std::vector<std::pair<int,int>> Tree::find_empty_vec(const std::vector<std::vector<TicTacToe::state> >& v){
 
     std::vector<std::pair<int, int>> empty_vec;
-    for(int i = 0; i < v.size(); i++){
-        for(int j = 0; j < v.size(); j++){
+    for(size_t i = 0; i < v.size(); i++){
+        for(size_t j = 0; j < v.size(); j++){
             
             if(v[i][j] == TicTacToe::EMPTY)
                 empty_vec.push_back(std::make_pair(i, j));
@@ -171,8 +172,8 @@ int Tree::game_state(const std::vector<std::vector<TicTacToe::state> >& cur_stat
     else if( (cur_state[0][2] == TicTacToe::HASO) && (cur_state[1][2] == TicTacToe::HASO) && (cur_state[2][2] == TicTacToe::HASO))
         return 2;
  
-    for(int i = 0; i < cur_state.size(); i++){
-        for(int j = 0; j < cur_state.size(); j++){
+    for(size_t i = 0; i < cur_state.size(); i++){
+        for(size_t j = 0; j < cur_state.size(); j++){
             if( (cur_state[i][j] == TicTacToe::HASO) || (cur_state[i][j] == TicTacToe::HASX))
                 mcount++;
         }
