@@ -14,8 +14,13 @@
 class Tree;
 
 class TicTacToe{
-    // 
-    const size_t size = 3;
+    // logical size of tictactoe 
+    const size_t size   = 3;
+    // this is the total size of tictactoe board in terminal
+    const size_t length = 16;
+    // size of each square of board 
+    // a size of 3 contains 3*3 = 9 squares
+    const size_t sqSize = 5;
 public:
     // this can be accessed in compile time TicTacToe::
     enum s {EMPTY, HASX, HASO};   

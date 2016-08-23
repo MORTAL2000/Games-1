@@ -4,6 +4,7 @@
 #define RED_TEXT    "\e[31;1m"
 #define YELLOW_TEXT "\e[33;1m"
 #define DEFAULT     "\e[0m"
+#define GREEN_TEXT  "\e[32;1m"
 
 TicTacToe::TicTacToe():turn(true),cur_state(size){
     for(auto &it : cur_state){
@@ -13,95 +14,85 @@ TicTacToe::TicTacToe():turn(true),cur_state(size){
     my_tree = std::make_shared<Tree>();
 }
 
-
 int TicTacToe::print(){
-     
-    int count      = 0;
-    int a          = 0;
-    int length     = 3*size; 
-    int endl_count = 0;
+    
+    // this is keep track for rolling back 
+    size_t endl_count = 0;
+    size_t x = 0;
+    size_t y = 0;
 
-    for(size_t i = 0; i < size; i++){
-        for(size_t j = 0; j < size; j++){
-            
-            if (count == 0){
-                for(a = 0; a < length; a++){
-                    if( (a+1)%3 == 0) std::cout << " |";
-                    else std::cout << " ";
-                }
-                count++;
-                endl_count++;
-                std::cout << std::endl;
-            }
-            if (count == 1){
-                for( a = 0; a < 3; a++){      
-                    if(a == 1){
-                        if(cur_state[i][j] == HASX) 
-                            std::cout << "X";
-                        else if(cur_state[i][j] == HASO)    
-                            std::cout << "O"; 
-                        else std::cout << " ";
-                    }
-                    else if( (a+1)%3 == 0) std::cout << " |";
-                    else std::cout << " ";
-        
-                }
-                if( j == 2 ){
-                    count++;
-                    endl_count++;
-                    std::cout << std::endl;
-                } 
-            }
-            if (count == 2){
-                for(a = 0; a < length; a++){
-                    if( i < 2){  
-                        if((a+1)%3 == 0) std::cout << "_|";
-                        else std::cout << "_";
-                    }else{
-                        if((a+1)%3 == 0) std::cout << " |";
-                        else std::cout << " ";
-                    }
-                }
-            }
+    while(x < size){
+        for(size_t i = 0; i < length; i++){
+            if((i+1)%(sqSize+1) == 0 && (i+1) != length) std::cout <<"|"; 
+            else std::cout << " ";
         }
-        count = 0;
-        endl_count++;
         std::cout << std::endl;
+
+        while( y < size){
+            for(size_t j = 0; j < sqSize; j++){
+                if(cur_state[x][y] == EMPTY){
+                    if((sqSize-1)/2 == j){
+                        std::cout << ",";
+                    }
+                    else if(((sqSize-1)/2 - 1) == j) std::cout << x; 
+                    else if(((sqSize-1)/2 + 1) == j) std::cout << y;
+                    else std::cout << " ";
+                }else if(cur_state[x][y] == HASO){
+                    if((sqSize-1)/2 == j){
+                        std::cout << RED_TEXT;
+                        std::cout << "O";
+                        std::cout << DEFAULT;
+                    }else std::cout << " ";
+                }else if(cur_state[x][y] == HASX){
+                    if((sqSize-1)/2 == j){
+                        std::cout << GREEN_TEXT;
+                        std::cout << "X";
+                        std::cout << DEFAULT;
+                    }else std::cout << " ";
+                }
+            }
+            if(y<(size-1)) std::cout << "|";
+            y++;
+        }
+        std::cout << std::endl;
+
+        for(size_t k = 0; k < length; k++){
+            if((k+1)%(sqSize+1) == 0 && (k+1) != length) std::cout <<"|"; 
+            else if(x < (size-1)) std::cout << "_";
+            else std::cout << " ";
+        }
+        std::cout << std::endl;
+        x++;   
+        y = 0;
+        endl_count += 3;
     }
     return endl_count;
 }
 
 void TicTacToe::parse_value(std::string s, int& x, int& y){
-    
-    int i = 0;
-    int count = 0;
+    size_t i = 0;
+    size_t count = 0;
+    if(s[i] == '\0') throw std::invalid_argument("Please provide some input data");
     while ( s[i] != '\0' ){
-        if(s[i] == ' ') {
+        if(s[i] == ' ' || s[i] == ',') {
             i++;
             continue;
         }else{
-            //std::cout << "In else : i = " << i <<": s[i] = " << s[i] << std::endl;
-            // Major logic failure here 
-            if(s[i+1] != ' ' && s[i+1] != '\0' )
-                throw std::invalid_argument(" Please Enter x and y in range of 0-2           "); 
-            if(count == 0){
+            if(count == 0){  
                 count++;    
+                if(s[i+1] != ' ' && s[i+1] != ',')
+                    throw std::invalid_argument("Please Enter intput in correct format : 0 0 or 0,0");
                 x = s[i] - '0';
-              //  std::cout << "x = " << x << std::endl;
                 if((x > 2) || (x < 0)) 
-                    throw std::invalid_argument(" Please Enter x in range of 0-2             ");
-                i++;
-                continue;
-            }else if(count == 1){
-                count++;
+                    throw std::invalid_argument(" Please Enter x in range of 0-2                        ");
+            }else{
                 y = s[i] - '0';
-              //  std::cout << "y = " << y << std::endl;
                 if((y > 2) || (y < 0)) 
-                    throw std::invalid_argument(" Please Enter y in range of 0-2              ");
+                    throw std::invalid_argument(" Please Enter y in range of 0-2                        ");
                 break;
-            }
-            
+            }   
         }
+        i++;
     }
 }
 
@@ -112,7 +103,7 @@ void TicTacToe::parse_value(std::string s, int& x, int& y){
 void TicTacToe::set_state(int i, int j, state s){
     
     if( cur_state[i][j] != EMPTY) 
-        throw std::invalid_argument("The index you entered already taken            ");
+        throw std::invalid_argument("The index you entered already taken                               ");
     cur_state[i][j] = s;
 }
 
@@ -124,9 +115,9 @@ void TicTacToe::run(){
     std::string my_string;
 
     std::cout << YELLOW_TEXT;
-    std::cout << "                  Welcom to TicTacToe           \n";
-    std::cout << "     Please enter input via X and Y cordinate:   " << std::endl;
-    std::cout << "eg: 1 2 if you enter 1 and 2 the X co-ordinate and Y co-ordinate" << std::endl;
+    std::cout << "                     Welcom to TicTacToe           \n";
+    std::cout << "        Please enter input in form of X and Y cordinate:   " << std::endl;
+    std::cout << "eg: If you enter 1 2 or 1,2 then 1 resemble as X co-ordinate and 2 as  Y co-ordinate" << std::endl;
     std::cout << DEFAULT;
     std::cout << std::endl;
     while(state == 0){
@@ -147,14 +138,13 @@ void TicTacToe::run(){
             // zero (or missing), clear from cursor to the end of the line.
             std::cout << "\033[0K";
         }
-
-        //if(step > 12) step = 12;
         try{
             parse_value(my_string,x,y);
             if(turn){
                 try{
                     set_state(x,y, HASX);
                     turn = give_turn(); // This is nor proper place for this
+                    std::cout << "\033[2k";
                 } catch(std::invalid_argument& e){
                     std::cout << e.what() << std::endl;
                     step++;
@@ -164,17 +154,18 @@ void TicTacToe::run(){
                 try{
                 //set_state(x, y, HASO);
                 // This is machine turn now
-                 machine_set_state(HASO);
+                machine_set_state(HASO);
                 turn = give_turn(); // This is nor proper place for this
+                std::cout << "\033[2k";
                 } catch(std::invalid_argument& e){
                     std::cout << e.what() << std::endl;
                     step++;
                 }
             }
             //std::cout << " You Entered  " << x << " , " <<  y <<"                  "<< std::endl;
-            //std::cout << "\033[2k";
         } catch( std::invalid_argument& e){
             std::cout << e.what() << std::endl;
+            step++;
         }
         roll_back(step);
         state = game_state();
