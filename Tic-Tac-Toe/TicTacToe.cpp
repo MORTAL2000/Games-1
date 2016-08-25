@@ -6,12 +6,22 @@
 #define DEFAULT     "\e[0m"
 #define GREEN_TEXT  "\e[32;1m"
 
-TicTacToe::TicTacToe():turn(true),cur_state(size){
+TicTacToe::TicTacToe():gstate(RUNNING),turn(true), cur_state(size){
     for(auto &it : cur_state){
-        it.resize(size,EMPTY);
+        it.resize(size, EMPTY);
     }
-    //my_tree = new Tree;
     my_tree = std::make_shared<Tree>();
+}
+
+void TicTacToe::reset(){
+
+    cur_state.clear();
+    cur_state.resize(size);
+    for(auto &it : cur_state){
+        it.resize(size, EMPTY);
+    }  
+    turn = true;
+    gstate = RUNNING;  
 }
 
 int TicTacToe::print(){
@@ -71,15 +81,24 @@ int TicTacToe::print(){
 
 void TicTacToe::parse_value(std::string s, int& x, int& y){
     size_t i = 0;
-    size_t count = 0;
+    bool   xturn = true;
     if(s[i] == '\0') throw std::invalid_argument("Please provide some input data");
     while ( s[i] != '\0' ){
         if(s[i] == ' ' || s[i] == ',') {
             i++;
+            if(!xturn && s[i] == '\0')
+                throw std::invalid_argument("You forgot y : Please intput in correct format : 0 0 or 0,0");
             continue;
         }else{
-            if(count == 0){  
-                count++;    
+            if(xturn){  
+                if(s[i] == 'q') {
+                    gstate = QUIT;
+                    return;
+                }else if(s[i] == 'r'){
+                    gstate = RESTART; 
+                    return;
+                }
+                xturn = false;    
                 if(s[i+1] != ' ' && s[i+1] != ',')
                     throw std::invalid_argument("Please Enter intput in correct format : 0 0 or 0,0");
                 x = s[i] - '0';
@@ -107,141 +126,173 @@ void TicTacToe::set_state(int i, int j, state s){
     cur_state[i][j] = s;
 }
 
+void TicTacToe::welcome_message(){
+    std::cout << YELLOW_TEXT;
+    std::cout << "                Welcome to TicTacToe         \n";
+    std::cout << "    For Single Player press 1 or  press 2 for Multi player \n\n\n";
+    std::cout << DEFAULT;
+    
+}
+
+int TicTacToe::select_player(){
+    int choice;
+    
+    std::cout << "Please Enter your choice : ";
+    while(true){
+        std::cin >> choice;
+        if(choice != 1 && choice != 2){
+            std::cout << "\e[A"; 
+            std::cout << "\033[0K";
+            std::cout << "Please Enter your choice (1 or 2) : ";
+            // To make sure wrong cin ( string or something else is handled)
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            continue;
+        }else break;
+    }
+    std::cout << "\n";
+    if(choice == 1){
+        std::cout << "   Single Player Mode (Human Vs Machine)\n\n";
+    }else if(choice == 2){
+        std::cout << "   Multi Player Mode (Human Vs Human)\n\n";
+    }
+    return choice; 
+}
+
 void TicTacToe::run(){
+
+    int choice;
+    
+    welcome_message();
+
+    choice = select_player();
+    
+    play_game(choice);
+}
+
+void TicTacToe::play_game(int choice){
+    int step; 
+    std::string input_string;
+    bool turn = true; 
     int x;
     int y;
-    int step  = 0;//size*size + 1;
-    int state = 0;
-    std::string my_string;
 
-    std::cout << YELLOW_TEXT;
-    std::cout << "                     Welcom to TicTacToe           \n";
-    std::cout << "        Please enter input in form of X and Y cordinate:   " << std::endl;
-    std::cout << "eg: If you enter 1 2 or 1,2 then 1 resemble as X co-ordinate and 2 as  Y co-ordinate" << std::endl;
-    std::cout << DEFAULT;
-    std::cout << std::endl;
-    while(state == 0){
+    // This will ignore the newline that was there after consumtion from cin above  
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+ 
+    while(gstate == RUNNING){
+    
         step = print();
-       // print_state();
-        //std::cout << "Please enter co-ordinates seperated by space            \n";
-        if(turn){ 
-            step++;
-            std::cout << "Its X turn >>  "  << " : ";
+        std::cout << "\n";
+        std::cout << "Please enter co-ordinate seperated by space for ";
+        
+        if(turn){
+            std::cout << " X : ";
             // google : wiki ANSI escape code for more detail
             // zero (or missing), clear from cursor to the end of the line.
-            std::cout << "\033[0K";
-            std::getline(std::cin,my_string);
-        }    
-        else{ 
-            //std::cout << "Its O turn >> ";
-            // google : wiki ANSI escape code for more detail
-            // zero (or missing), clear from cursor to the end of the line.
-            std::cout << "\033[0K";
-        }
-        try{
-            parse_value(my_string,x,y);
-            if(turn){
-                try{
-                    set_state(x,y, HASX);
-                    turn = give_turn(); // This is nor proper place for this
-                    std::cout << "\033[2k";
-                } catch(std::invalid_argument& e){
-                    std::cout << e.what() << std::endl;
-                    step++;
+            std::cout << "\033[0K"; 
+            std::getline(std::cin, input_string);
+            try{
+                parse_value(input_string, x, y);
+                if(gstate == RESTART){
+                    reset();
+                    roll_back(step+2);
+                    continue;
                 }
+                set_state(x, y, HASX);
+            }catch (std::invalid_argument &e){
+                step += 3;
+                std::cout << RED_TEXT;
+                std::cout << e.what() << std::endl;
+                std::cout << DEFAULT;
+                roll_back(step);
+                continue;
             }
-            else{
-                try{
-                //set_state(x, y, HASO);
-                // This is machine turn now
-                machine_set_state(HASO);
-                turn = give_turn(); // This is nor proper place for this
-                std::cout << "\033[2k";
-                } catch(std::invalid_argument& e){
-                    std::cout << e.what() << std::endl;
-                    step++;
+            turn = false;
+        }else{
+            std::cout << " O : ";
+            if(choice == 2){
+                std::cout << "\033[0K"; 
+                std::getline(std::cin, input_string);
+            }       
+            try{
+                if(choice == 1){
+                    std::cout << std::endl;
+                    my_tree->minimax(x, y, cur_state);
                 }
+                else if(choice == 2){ 
+                    parse_value(input_string, x, y);
+                    if(gstate == RESTART) {
+                        reset();
+                        roll_back(step+2);
+                        continue;
+                    }
+                }
+                set_state(x, y, HASO);
+             }catch (std::invalid_argument &e){
+                step += 3;
+                std::cout << RED_TEXT;
+                std::cout << e.what() << std::endl;
+                std::cout << DEFAULT;
+                roll_back(step);
+                continue;
             }
-            //std::cout << " You Entered  " << x << " , " <<  y <<"                  "<< std::endl;
-        } catch( std::invalid_argument& e){
-            std::cout << e.what() << std::endl;
-            step++;
+            turn = true;
         }
+        step += 2;      
         roll_back(step);
-        state = game_state();
+        gstate = game_state();
     }
-    step = print();
+    print();
     std::cout << std::endl;
     std::cout << RED_TEXT;
-    if ( state == 1) std::cout << "HUMAN WON: Congratulaton Your Sneaky Baster " << std::endl;
-    else if ( state == 2) std::cout << "Computer WON .. Now I head for world domination "<< std::endl;
-    else if ( state == 3) std::cout << "There was a DRAW!!  " << std::endl;
+    if ( gstate == XWON) std::cout << "HUMAN WON: Congratulaton Your Sneaky Baster                  " << std::endl;
+    else if ( gstate == OWON) std::cout << "Computer WON .. Now I head for world domination         "<< std::endl;
+    else if ( gstate == DRAW) std::cout << "There was a DRAW                                        " << std::endl;
+    else if ( gstate == QUIT) std::cout << "You Quit the game                                       " << std::endl;
     std::cout << DEFAULT;
-
 }
 
-void TicTacToe::minimax(int& x, int& y){
-    // latter I could ask user for algorithm that they want 
-    // and use switch to select the proper 
-    // algorithm 
-    my_tree->minimax(x, y, cur_state);
-
-}
-    
-// this function calls set_state by providing 
-// appropriate x and y
-void TicTacToe::machine_set_state(state s){
-
-    int x;
-    int y;
-    
-    //std::cout << "entering machine setting for  x  = " << x << " ,  y = " << y << std::endl;
-    minimax(x, y); 
-
-    //std::cout << "got machine setting of x  = " << x << " ,  y = " << y << std::endl;
-    set_state(x, y, s);
-}
-
-int TicTacToe::game_state(){
+TicTacToe::gs TicTacToe::game_state(){
  
     // use for loop here 
-
     int mcount = 0;    
     // if x win return 1 
     if( (cur_state[0][0] == HASX) && (cur_state[0][1] == HASX) && (cur_state[0][2] == HASX))
-        return 1;
+        return XWON;
     else if( (cur_state[1][0] == HASX) && (cur_state[1][1] == HASX) && (cur_state[1][2] == HASX))
-        return 1;
+        return XWON;
     else if( (cur_state[2][0] == HASX) && (cur_state[2][1] == HASX) && (cur_state[2][2] == HASX))
-        return 1;
+        return XWON;
     else if( (cur_state[0][0] == HASX) && (cur_state[1][1] == HASX) && (cur_state[2][2] == HASX))
-        return 1;
+        return XWON;
     else if( (cur_state[2][0] == HASX) && (cur_state[1][1] == HASX) && (cur_state[0][2] == HASX))
-        return 1;
+        return XWON;
     else if( (cur_state[0][0] == HASX) && (cur_state[1][0] == HASX) && (cur_state[2][0] == HASX))
-        return 1;
+        return XWON;
     else if( (cur_state[0][1] == HASX) && (cur_state[1][1] == HASX) && (cur_state[2][1] == HASX))
-        return 1;
+        return XWON;
     else if( (cur_state[0][2] == HASX) && (cur_state[1][2] == HASX) && (cur_state[2][2] == HASX))
-        return 1;
+        return XWON;
  
   //  if o win return 2   
     else if( (cur_state[0][0]  == HASO) && (cur_state[0][1]  == HASO) && (cur_state[0][2]  == HASO))
-        return 2;
+        return OWON;
     else if( (cur_state[1][0]  == HASO) && (cur_state[1][1]  == HASO) && (cur_state[1][2]  == HASO))
-        return 2;
+        return OWON;
     else if( (cur_state[2][0]  == HASO) && (cur_state[2][1]  == HASO) && (cur_state[2][2]  == HASO))
-        return 2;
+        return OWON;
     else if( (cur_state[0][0]  == HASO) && (cur_state[1][1]  == HASO) && (cur_state[2][2]  == HASO))
-        return 2;
+        return OWON;
     else if( (cur_state[2][0]  == HASO) && (cur_state[1][1]  == HASO) && (cur_state[0][2]  == HASO))
-        return 2;
+        return OWON;
     else if( (cur_state[0][0] == HASO) && (cur_state[1][0] == HASO) && (cur_state[2][0] == HASO))
-        return 2;
+        return OWON;
     else if( (cur_state[0][1] == HASO) && (cur_state[1][1] == HASO) && (cur_state[2][1] == HASO))
-        return 2;
+        return OWON;
     else if( (cur_state[0][2] == HASO) && (cur_state[1][2] == HASO) && (cur_state[2][2] == HASO))
-        return 2;
+        return OWON;
  
     for(size_t i = 0; i < size; i++){
         for(size_t j = 0; j < size; j++){
@@ -249,24 +300,10 @@ int TicTacToe::game_state(){
                 mcount++;
         }
     }
-    if (mcount == (size*size)) return 3;
+    if (mcount == (size*size)) return DRAW;
 
-    else return 0;
+    else return RUNNING;
 }
-
-bool TicTacToe::give_turn(){
-    // we can use bit toggle here 
-    // true means turn of X
-    if(turn) {
-        turn = false;
-        return turn;       
-    }
-    else {
-        turn = true;
-        return turn;
-    }   
-}
-
 
 void TicTacToe::roll_back(int step){
     for(size_t i = 0; i < step; i++)std::cout << "\e[A";

@@ -9,7 +9,7 @@
 #include <vector>
 #include <tuple>
 #include <memory>
-
+#include <limits> 
 
 class Tree;
 
@@ -21,6 +21,19 @@ class TicTacToe{
     // size of each square of board 
     // a size of 3 contains 3*3 = 9 squares
     const size_t sqSize = 5;
+    // game state
+    enum gs { RUNNING, XWON, OWON, DRAW, RESTART, QUIT };
+
+    gs gstate;
+    void welcome_message();
+    
+    // return 1 for single player and 2 for double player
+    int select_player();
+    // main engine that runs the game  
+    void play_game(int);
+    // method for debugging 
+    void print_state();
+
 public:
     // this can be accessed in compile time TicTacToe::
     enum s {EMPTY, HASX, HASO};   
@@ -35,17 +48,13 @@ public:
 
     TicTacToe();
     int print();
-    int game_state();
+    gs game_state();
     //void game_logic();
     void set_state(int i, int j, state s);
-    void machine_set_state(state);
     void run();  
     void parse_value(std::string s, int& x, int& y);
     void roll_back(int step);
-    bool give_turn();
-    void minimax(int& x, int& y);
-    void print_state();
-    
+    void reset();
 };
 
 #endif
