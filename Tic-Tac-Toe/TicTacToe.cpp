@@ -253,10 +253,10 @@ void TicTacToe::play_game(int choice){
     print();
     std::cout << std::endl;
     std::cout << RED_TEXT;
-    if ( gstate == XWON) std::cout << "HUMAN WON: Congratulaton Your Sneaky Baster                  " << std::endl;
-    else if ( gstate == OWON) std::cout << "Computer WON .. Now I head for world domination         "<< std::endl;
-    else if ( gstate == DRAW) std::cout << "There was a DRAW                                        " << std::endl;
-    else if ( gstate == QUIT) std::cout << "You Quit the game                                       " << std::endl;
+    if ( gstate == XWON) std::cout << "HUMAN WON: Congratulation!!                                            "<< std::endl;
+    else if ( gstate == OWON) std::cout << "COMPUTER WON: Congratulation!!                                    "<< std::endl;
+    else if ( gstate == DRAW) std::cout << "There was a DRAW!!                                                "<< std::endl;
+    else if ( gstate == QUIT) std::cout << "You Quit the game!!                                               "<< std::endl;
     std::cout << DEFAULT;
 }
 
