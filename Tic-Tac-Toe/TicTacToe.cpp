@@ -199,6 +199,9 @@ void TicTacToe::play_game(int choice){
                     reset();
                     roll_back(step+2);
                     continue;
+                } else if (gstate == QUIT){
+                    roll_back(step+2);
+                    break;
                 }
                 set_state(x, y, HASX);
             }catch (std::invalid_argument &e){
@@ -227,6 +230,9 @@ void TicTacToe::play_game(int choice){
                         reset();
                         roll_back(step+2);
                         continue;
+                    }else if (gstate == QUIT){
+                        roll_back(step+2);
+                        break;
                     }
                 }
                 set_state(x, y, HASO);
